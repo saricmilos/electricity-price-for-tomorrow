@@ -1,6 +1,6 @@
 # Ignore Python virtual environments
 venv/
-electricity_price/
+electricity_price_venv/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
