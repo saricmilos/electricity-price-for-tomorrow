@@ -129,3 +129,71 @@ def plot_time_series(df, columns, title='Time Series', y_label='Value', stacked=
     )
 
     fig.show()
+
+def plot_generation_composition(df, generation_cols, start_date=None, end_date=None, title='Generation Composition'):
+    """
+    Plots a stacked area chart showing the composition of generation over time.
+
+    Parameters:
+    -----------
+    df : pd.DataFrame
+        DataFrame with datetime index and generation columns.
+    generation_cols : list
+        List of columns representing different generation sources.
+    start_date : str or pd.Timestamp, optional
+        Start date for filtering data (e.g., '2024-04-27').
+    end_date : str or pd.Timestamp, optional
+        End date for filtering data (e.g., '2024-04-28').
+    title : str
+        Plot title.
+    """
+    # Ensure the index is datetime
+    if not pd.api.types.is_datetime64_any_dtype(df.index):
+        df.index = pd.to_datetime(df.index)
+
+    # Make index timezone-naive
+    if df.index.tz is not None:
+        df.index = df.index.tz_localize(None)
+
+    # Filter by date if provided
+    filtered_df = df.copy()
+    if start_date:
+        start_date = pd.Timestamp(start_date)
+        filtered_df = filtered_df[filtered_df.index >= start_date]
+    if end_date:
+        end_date = pd.Timestamp(end_date) + pd.Timedelta(days=1)
+        filtered_df = filtered_df[filtered_df.index < end_date]
+
+    if filtered_df.empty:
+        print("Warning: No data available for the specified date range.")
+        return
+
+    # Ensure all generation columns are numeric
+    filtered_df[generation_cols] = filtered_df[generation_cols].apply(pd.to_numeric, errors='coerce').fillna(0)
+
+    # Generate colors
+    colors = px.colors.qualitative.Plotly
+
+    # Create figure
+    fig = go.Figure()
+
+    for i, col in enumerate(generation_cols):
+        fig.add_trace(go.Scatter(
+            x=filtered_df.index,
+            y=filtered_df[col],
+            mode='lines',
+            name=col,
+            line=dict(width=0.5, color=colors[i % len(colors)]),
+            stackgroup='one'  # Enables stacking
+        ))
+
+    fig.update_layout(
+        title=title,
+        xaxis_title='Time',
+        yaxis_title='Power (MW)',
+        xaxis_rangeslider_visible=True,
+        legend=dict(title='Source', orientation='h', yanchor='bottom', y=1.02, xanchor='right', x=1),
+        template='plotly_white'
+    )
+
+    fig.show()
