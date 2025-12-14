@@ -224,6 +224,44 @@ def plot_timeseries_average_by_time(df, column, time_feature, title=None, ylabel
     plt.grid(True)
     plt.show()
 
+def plot_timeseries_average_by_time_multiple_columns(df, columns, time_feature, title=None, ylabel=None, figsize=(10,5), markers=None, colors=None):
+    """
+    Plots average values of one or more columns grouped by a time feature (hour_of_day, day_of_week, month, etc.)
+
+    Parameters:
+    - df: pandas DataFrame with the data
+    - columns: str or list of column names to plot
+    - time_feature: str, time-based feature to group by
+    - title: str, optional plot title
+    - ylabel: str, optional y-axis label
+    - figsize: tuple, figure size
+    - markers: list of marker styles for each column
+    - colors: list of colors for each column
+    """
+    # Ensure columns is a list
+    if isinstance(columns, str):
+        columns = [columns]
+    
+    # Default markers and colors if not provided
+    if markers is None:
+        markers = ['o'] * len(columns)
+    if colors is None:
+        colors = [None] * len(columns)
+    
+    plt.figure(figsize=figsize)
+    
+    for i, col in enumerate(columns):
+        avg_values = df.groupby(time_feature)[col].mean()
+        plt.plot(avg_values, marker=markers[i], color=colors[i], label=col)
+    
+    plt.title(title if title else f'Average {", ".join(columns)} by {time_feature}')
+    plt.xlabel(time_feature.replace('_', ' ').title())
+    plt.ylabel(ylabel if ylabel else "Value")
+    plt.grid(True)
+    plt.legend()
+    plt.show()
+
+
 def plot_time_heatmap(df, column, index_feature, column_feature, title=None, cmap='viridis', figsize=(12,6)):
     """
     Plots a heatmap of average values of a column, grouped by two time-based features.
@@ -249,4 +287,28 @@ def plot_time_heatmap(df, column, index_feature, column_feature, title=None, cma
     plt.title(title if title else f'Average {column}: {index_feature} vs {column_feature}')
     plt.xlabel(column_feature.replace('_', ' ').title())
     plt.ylabel(index_feature.replace('_', ' ').title())
+    plt.show()
+
+def plot_correlation_with_target(df, target_column, figsize=(12,12), cmap='coolwarm', vmin=-1, vmax=1, sort=True):
+    """
+    Plots a heatmap of correlation between all numerical columns and the target column.
+
+    Parameters:
+    - df: pandas DataFrame
+    - target_column: str, the column to correlate against
+    - figsize: tuple, figure size
+    - cmap: str, colormap
+    - vmin, vmax: float, limits for correlation values
+    - sort: bool, whether to sort columns by correlation with target
+    """
+    corr_matrix = df.corr()
+    
+    target_corr = corr_matrix[[target_column]]
+    
+    if sort:
+        target_corr = target_corr.sort_values(by=target_column, ascending=False)
+    
+    plt.figure(figsize=figsize)
+    sns.heatmap(target_corr, annot=True, cmap=cmap, vmin=vmin, vmax=vmax)
+    plt.title(f'Correlation of Numerical Features with {target_column}', fontsize=16)
     plt.show()
