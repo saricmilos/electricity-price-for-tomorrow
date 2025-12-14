@@ -4,7 +4,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
 import plotly.io as pio
-import nbformat
+import seaborn as sns
 
 def plot_time_series_day(df, date, columns, title=None, y_label='Value'):
     """
@@ -197,3 +197,56 @@ def plot_generation_composition(df, generation_cols, start_date=None, end_date=N
     )
 
     fig.show()
+
+
+def plot_timeseries_average_by_time(df, column, time_feature, title=None, ylabel=None, figsize=(10,5), marker='o', color=None):
+    """
+    Plots average values of a column grouped by a time feature (hour_of_day, day_of_week, month, etc.)
+
+    Parameters:
+    - df: pandas DataFrame with the data
+    - column: str, name of the column to plot
+    - time_feature: str, name of the time-based feature to group by ('hour_of_day', 'day_of_week', 'month', etc.)
+    - title: str, optional title for the plot
+    - ylabel: str, optional y-axis label
+    - figsize: tuple, size of the figure
+    - marker: str, marker style
+    - color: str, line color
+    """
+    
+    avg_values = df.groupby(time_feature)[column].mean()
+    
+    plt.figure(figsize=figsize)
+    plt.plot(avg_values, marker=marker, color=color)
+    plt.title(title if title else f'Average {column} by {time_feature}')
+    plt.xlabel(time_feature.replace('_', ' ').title())
+    plt.ylabel(ylabel if ylabel else column)
+    plt.grid(True)
+    plt.show()
+
+def plot_time_heatmap(df, column, index_feature, column_feature, title=None, cmap='viridis', figsize=(12,6)):
+    """
+    Plots a heatmap of average values of a column, grouped by two time-based features.
+
+    Parameters:
+    - df: pandas DataFrame
+    - column: str, column to plot (e.g., 'generation_solar')
+    - index_feature: str, column to use as heatmap index (rows, e.g., 'hour_of_day')
+    - column_feature: str, column to use as heatmap columns (e.g., 'day_of_week', 'month')
+    - title: str, optional plot title
+    - cmap: str, color map
+    - figsize: tuple, figure size
+    """
+    heatmap_data = df.pivot_table(
+        values=column,
+        index=index_feature,
+        columns=column_feature,
+        aggfunc='mean'
+    )
+    
+    plt.figure(figsize=figsize)
+    sns.heatmap(heatmap_data, cmap=cmap)
+    plt.title(title if title else f'Average {column}: {index_feature} vs {column_feature}')
+    plt.xlabel(column_feature.replace('_', ' ').title())
+    plt.ylabel(index_feature.replace('_', ' ').title())
+    plt.show()
