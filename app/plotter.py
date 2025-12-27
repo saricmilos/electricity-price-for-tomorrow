@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Form
 from fastapi.responses import HTMLResponse
+from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 import pandas as pd
 from pathlib import Path
@@ -14,6 +15,19 @@ from src.fast_api_functions import (
 )
 
 app = FastAPI(title="Electricity Generation Plotter")
+
+# Add CORS middleware - ADD THIS SECTION
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://saricmilos.com",
+        "http://localhost:*",  # for local development
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 # Load dataset once
 data_path = Path(__file__).resolve().parent.parent / "data" / "energy_clean.csv"
